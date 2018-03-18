@@ -18,6 +18,78 @@ const NC = require("./nc2012_results.json");
 
 const colorScale = r => [r * 255, 140, 200 * (1 - r)];
 
+function renderTable(
+  data,
+  layerName = "No Layer Name",
+  testTitle = "Selected Point"
+) {
+  return (
+    <table width="100%">
+      <thead>
+        <tr>
+          <th />
+          <th>{testTitle}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Information</th>
+          <td> {layerName} </td>
+          </tr>
+          <tr>
+          <th>Year</th>
+          <td> 2012 </td>
+          </tr>
+        <tr>
+          <th>County, State</th>
+          <td> Bar </td>
+        </tr>
+        <tr>
+          <th>Entity Name</th>
+          <td> Foo </td>
+        </tr>
+        <tr>
+          <th>Entity Type</th>
+          <td> Precinct </td>
+        </tr>
+      </tbody>
+    </table>
+  );
+}
+
+function LayerInfo({
+  hoverChoropleth,
+  hoverPoint,
+  hoverArc,
+  hoverLine,
+  clickItem,
+  layerId
+}) {
+  let data = [];
+  return (
+    <div
+      id="overlay-control"
+      style={{
+        position: "absolute",
+        bottom: 20,
+        left: 20,
+        zIndex: 99,
+        pointerEvents: "none"
+      }}
+    >
+      <div
+        style={{
+          padding: "1em",
+          marginBottom: "2em",
+          width: 500
+        }}
+      >
+        <div>{renderTable(data)}</div>
+      </div>
+    </div>
+  );
+}
+
 function to_feature_collection(arr) {
   let features = [];
   for (var precinct in arr) {
@@ -70,7 +142,11 @@ class Root extends Component {
         height: 500
       },
       data: null,
-      hoveredFeature: null
+      hoveredFeature: null,
+      state: 'North Carolina',
+      entity_type: 'Census VTD Precincts',
+      year: 2012,
+
     };
     requestJson(DATA_URL, (error, response) => {
       if (!error) {
@@ -135,13 +211,11 @@ class Root extends Component {
     this.setState({ mouseEntered: false });
   }
 
-  render() {
+  _render_map() {
     const { viewport, data } = this.state;
-
     if (!data) {
       return null;
     }
-
     const layer = new GeoJsonLayer({
       id: "geojson",
       data,
@@ -157,6 +231,23 @@ class Root extends Component {
       getLineColor: f => [255, 255, 255],
       pickable: Boolean(this.props.onHover)
     });
+    return (
+      <MapGL
+        {...viewport}
+        onViewportChange={this._onViewportChange.bind(this)}
+        mapboxApiAccessToken={MAPBOX_TOKEN}
+      >
+        <DeckGL {...viewport} layers={[layer]} />
+      </MapGL>
+    );
+  }
+
+  render() {
+    const { viewport, data } = this.state;
+
+    if (!data) {
+      return null;
+    }
 
     return (
       <div
@@ -164,14 +255,8 @@ class Root extends Component {
         onMouseEnter={this._onMouseEnter.bind(this)}
         onMouseLeave={this._onMouseLeave.bind(this)}
       >
-        {this._renderTooltip.bind(this)}
-        <MapGL
-          {...viewport}
-          onViewportChange={this._onViewportChange.bind(this)}
-          mapboxApiAccessToken={MAPBOX_TOKEN}
-        >
-          <DeckGL {...viewport} layers={[layer]} />
-        </MapGL>
+        {this._render_map()}
+        <LayerInfo {...this.state} />
       </div>
     );
   }
