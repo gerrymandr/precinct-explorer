@@ -5,6 +5,7 @@ import psycopg2.extras
 from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash, jsonify
 from flask_compress import Compress
+from flask_cors import CORS
 
 from werkzeug.contrib.cache import FileSystemCache
 
@@ -14,6 +15,7 @@ from sqlalchemy import Table
 
 app = Flask(__name__)
 Compress(app)
+CORS(app)
 
 app_cache = FileSystemCache('app_cache', threshold=500, default_timeout=5 * 60)
 
@@ -78,7 +80,7 @@ def cd_shapefiles():
         # except we want to make sure these are json formatted
         return rows
     else:
-        # return nothing bc we don't want to 
+        # return nothing bc we don't want to
         return jsonify({})
 
 
@@ -92,10 +94,16 @@ def cd_shapefiles():
 #     result = precinct.execute()
 #     rows = result.fetchall()
 #     # except we want to make sure these are json formatted
-#     return rows 
+#     return rows
 
 @app.route('/demo_response')
 def demo_response():
     shapefile = get_demo_shapefile()
     return jsonify(shapefile)
 
+
+def main():
+    app.run(threaded=True)
+
+if __name__ == '__main__':
+    main()
