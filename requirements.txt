@@ -4,6 +4,9 @@ click==6.7
 decorator==4.2.1
 enum34==1.1.6
 Flask==0.12.2
+Flask-Compress==1.4.0
+GeoAlchemy2==0.4.2
+ipdb==0.11
 ipython==5.5.0
 ipython-genutils==0.2.0
 itsdangerous==0.24
@@ -12,6 +15,7 @@ MarkupSafe==1.0
 pathlib2==2.3.0
 pexpect==4.4.0
 pickleshare==0.7.4
+postgis==1.0.4
 prompt-toolkit==1.0.15
 psycopg2==2.7.4
 psycopg2-binary==2.7.4
@@ -20,6 +24,8 @@ Pygments==2.2.0
 scandir==1.7
 simplegeneric==0.8.1
 six==1.11.0
+SQLAlchemy==1.2.5
 traitlets==4.3.2
 wcwidth==0.1.7
 Werkzeug==0.14.1
+
