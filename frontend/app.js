@@ -19,9 +19,9 @@ const NC = require("./nc2012_results.json");
 const colorScale = r => [r * 255, 140, 200 * (1 - r)];
 
 function renderTable(
-  data,
+  state,
   layerName = "No Layer Name",
-  testTitle = "Selected Point"
+  testTitle = "Hovered Point"
 ) {
   return (
     <table width="100%">
@@ -35,36 +35,31 @@ function renderTable(
         <tr>
           <th>Information</th>
           <td> {layerName} </td>
-          </tr>
-          <tr>
+        </tr>
+        <tr>
           <th>Year</th>
           <td> 2012 </td>
-          </tr>
+        </tr>
         <tr>
           <th>County, State</th>
-          <td> Bar </td>
+          <td>
+            {state["county_name"] || "None"}, {state["state_name"]}
+          </td>
         </tr>
         <tr>
           <th>Entity Name</th>
-          <td> Foo </td>
+          <td> {state.entity_name || "No entity selected"} </td>
         </tr>
         <tr>
           <th>Entity Type</th>
-          <td> Precinct </td>
+          <td> {state.entity_type || "No entity selected"} </td>
         </tr>
       </tbody>
     </table>
   );
 }
 
-function LayerInfo({
-  hoverChoropleth,
-  hoverPoint,
-  hoverArc,
-  hoverLine,
-  clickItem,
-  layerId
-}) {
+function LayerInfo(state) {
   let data = [];
   return (
     <div
@@ -84,7 +79,7 @@ function LayerInfo({
           width: 500
         }}
       >
-        <div>{renderTable(data)}</div>
+        <div>{renderTable(state.state)}</div>
       </div>
     </div>
   );
@@ -143,10 +138,10 @@ class Root extends Component {
       },
       data: null,
       hoveredFeature: null,
-      state: 'North Carolina',
-      entity_type: 'Census VTD Precincts',
-      year: 2012,
-
+      state_name: "North Carolina",
+      county_name: "",
+      entity_type: "Census VTD Precincts",
+      year: 2012
     };
     requestJson(DATA_URL, (error, response) => {
       if (!error) {
@@ -256,7 +251,7 @@ class Root extends Component {
         onMouseLeave={this._onMouseLeave.bind(this)}
       >
         {this._render_map()}
-        <LayerInfo {...this.state} />
+        <LayerInfo state={this.state} />
       </div>
     );
   }
