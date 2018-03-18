@@ -315,7 +315,6 @@ class Root extends Component {
   }
 
   _onHover({ x, y, object }) {
-    console.log(object);
     this.setState({ x, y, hoveredFeature: object });
   }
 
