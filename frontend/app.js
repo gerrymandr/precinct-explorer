@@ -10,11 +10,6 @@ import { json as requestJson } from "d3-request";
 // Set your mapbox token here
 const MAPBOX_TOKEN = process.env.MapboxAccessToken;
 
-// Source data GeoJSON
-const DATA_URL =
-  "https://raw.githubusercontent.com/uber-common/deck.gl-data/master/examples/geojson/vancouver-blocks.json"; // eslint-disable-line
-
-// psql postgres://census:xxxx@xxxx:5432/census -t -c "select array_to_json(array_agg(row_to_json(t))) from (select state_name, county_name,  precinct_name, ST_AsGeoJSON(the_geom) from precinct_view_2012 where state_name = 'North Carolina') t; " > nc2012_results.json
 const NC = require("./nc2012_results.json");
 
 const colorScale = r => [r * 255, 140, 200 * (1 - r)];
@@ -121,7 +116,10 @@ function LayerInfo(state) {
         bottom: 20,
         left: 20,
         zIndex: 99,
-        pointerEvents: "none"
+        pointerEvents: "none",
+        backgroundColor: "coral",
+        borderRadius: "10px",
+        border: "1px solid black"
       }}
     >
       <div
@@ -146,14 +144,18 @@ function StateDropdown({ value, on_change }) {
         top: 20,
         right: 30,
         zIndex: 99,
-        pointerEvents: "auto"
+        pointerEvents: "auto",
+        backgroundColor: "coral",
+        borderRadius: "10px",
+        border: "1px solid black"
       }}
     >
       <div
         style={{
           padding: "1em",
-          marginTop: "2em",
-          width: 500,
+          marginTop: "1em",
+          height: 100,
+          width: 300,
           overflowX: "hidden",
           overflowY: "scroll"
         }}
@@ -179,14 +181,18 @@ function EntityDropdown({ value, on_change }) {
         top: 20,
         left: 40,
         zIndex: 99,
-        pointerEvents: "auto"
+        pointerEvents: "auto",
+        borderRadius: "10px",
+        backgroundColor: "coral",
+        border: "1px solid black"
       }}
     >
       <div
         style={{
           padding: "1em",
           marginTop: "2em",
-          width: 500,
+            height: 50,
+            width: 300,
           overflowX: "hidden",
           overflowY: "scroll"
         }}
@@ -215,7 +221,7 @@ function to_feature_collection(arr) {
     } = arr[precinct];
     features.push({
       type: "Feature",
-      geometry: JSON.parse(st_asgeojson),
+      geometry: st_asgeojson,
       properties: {
         county_name: county_name,
         precinct_name: precinct_name,
@@ -224,7 +230,7 @@ function to_feature_collection(arr) {
     });
     features.push({
       type: "Feature",
-      geometry: JSON.parse(centroid),
+      geometry: centroid,
       properties: {
         title: precinct_name
       }
@@ -252,13 +258,15 @@ function rand() {
   return Math.floor(Math.random() * 255) + 0;
 }
 
+const PRECINCT_URL = "http://127.0.0.1:5000/shapefiles/precincts?";
+
 class Root extends Component {
   constructor(props) {
     super(props);
     this.state = {
       viewport: {
-        latitude: 35.301348,
-        longitude: -82.27895,
+        latitude: 39.609065,
+        longitude: -75.664186,
         zoom: 11,
         maxZoom: 16,
         pitch: 0,
@@ -268,17 +276,27 @@ class Root extends Component {
       },
       data: null,
       hoveredFeature: null,
-      state_name: "North Carolina",
+      state_name: "Delaware",
       county_name: "",
       entity_name: "",
       entity_type: "Census VTD Precincts",
       year: 2012
     };
-    requestJson(DATA_URL, (error, response) => {
+  }
+
+  _requestStateName() {
+    const { state_name } = this.state;
+    const url = PRECINCT_URL + "state=" + state_name;
+    console.log("Looking up", url);
+    requestJson(url, (error, response) => {
       if (!error) {
         this.setState({
-          data: to_feature_collection(NC)
+          data: to_feature_collection(response),
+          state_name: state_name
         });
+      } else {
+        console.log("boned");
+        console.log(error);
       }
     });
   }
@@ -286,6 +304,7 @@ class Root extends Component {
   componentDidMount() {
     window.addEventListener("resize", this._resize.bind(this));
     this._resize();
+    this._requestStateName();
   }
 
   _resize() {
@@ -306,7 +325,6 @@ class Root extends Component {
   }
 
   _onHover({ x, y, object }) {
-    console.log(object);
     this.setState({ x, y, hoveredFeature: object });
   }
 
@@ -349,7 +367,6 @@ class Root extends Component {
       getLineColor: f => [255, 255, 255],
       pickable: true,
       onHover: function(info) {
-        console.log(info);
         if (info && info.object) {
           this.setState({
             county_name: info.object.properties.county_name,
@@ -370,7 +387,12 @@ class Root extends Component {
   }
 
   _on_state_select(value) {
-    this.setState({ state_name: value.value });
+    this.setState(
+      { state_name: value.value },
+      function() {
+        this._requestStateName();
+      }.bind(this)
+    );
   }
 
   _on_entity_select(value) {

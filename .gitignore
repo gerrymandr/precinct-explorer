@@ -21,3 +21,4 @@ src/dist
 *json
 envvars
 app_cache/*
+*.pyc
