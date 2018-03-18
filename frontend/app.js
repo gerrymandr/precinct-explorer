@@ -4,9 +4,6 @@ import { render } from "react-dom";
 import MapGL from "react-map-gl";
 import DeckGL, { GeoJsonLayer } from "deck.gl";
 import Dropdown from "react-dropdown";
-import {setParameters} from 'luma.gl';
-
-import {TextLayer} from 'deck.gl-layers';
 
 import { json as requestJson } from "d3-request";
 
@@ -92,17 +89,13 @@ function renderTable(
       </thead>
       <tbody>
         <tr>
-          <th>Information</th>
-          <td> {layerName} </td>
-        </tr>
-        <tr>
           <th>Year</th>
           <td> 2012 </td>
         </tr>
         <tr>
           <th>County, State</th>
           <td>
-            {state["county_name"] || "None"}, {state["state_name"]}
+            {state["county_name"] || "None"} County, {state["state_name"]}
           </td>
         </tr>
         <tr>
@@ -274,18 +267,17 @@ class Root extends Component {
         height: 500
       },
       data: null,
-      labels: [],
       hoveredFeature: null,
       state_name: "North Carolina",
       county_name: "",
+      entity_name: "",
       entity_type: "Census VTD Precincts",
       year: 2012
     };
     requestJson(DATA_URL, (error, response) => {
       if (!error) {
         this.setState({
-          data: to_feature_collection(NC),
-          labels: data_to_labels(NC)
+          data: to_feature_collection(NC)
         });
       }
     });
@@ -295,13 +287,6 @@ class Root extends Component {
     window.addEventListener("resize", this._resize.bind(this));
     this._resize();
   }
-
-    _initialize(gl) {
-        setParameters(gl, {
-            blendFunc: [gl.SRC_ALPHA, gl.ONE, gl.ONE_MINUS_DST_ALPHA, gl.ONE],
-            blendEquation: gl.FUNC_ADD
-        });
-    }
 
   _resize() {
     this._onViewportChange({
@@ -321,20 +306,12 @@ class Root extends Component {
   }
 
   _onHover({ x, y, object }) {
+    console.log(object);
     this.setState({ x, y, hoveredFeature: object });
   }
 
-  _renderTooltip() {
-    const { x, y, hoveredObject } = this.state;
-    console.log("foo", hoveredObject);
-    if (!hoveredObject) {
-      return null;
-    }
-    return (
-      <div className="tooltip" style={{ left: x, top: y }}>
-        <div>{`Accidents`}</div>
-      </div>
-    );
+  _onSelect(val) {
+    console.log(val);
   }
 
   _onMouseMove(evt) {
@@ -367,11 +344,19 @@ class Root extends Component {
       extruded: false,
       wireframe: false,
       fp64: false,
-      onHover: this._onHover.bind(this),
       getFillColor: () => [rand(), rand(), rand(), rand()],
       elevationScale: 0,
       getLineColor: f => [255, 255, 255],
-      pickable: Boolean(this.props.onHover)
+      pickable: true,
+      onHover: function(info) {
+        console.log(info);
+        if (info && info.object) {
+          this.setState({
+            county_name: info.object.properties.county_name,
+            entity_name: info.object.properties.precinct_name
+          });
+        }
+      }.bind(this)
     });
     return (
       <MapGL
@@ -379,7 +364,7 @@ class Root extends Component {
         onViewportChange={this._onViewportChange.bind(this)}
         mapboxApiAccessToken={MAPBOX_TOKEN}
       >
-            <DeckGL {...viewport} layers={[layer, labels]} />
+        <DeckGL {...viewport} layers={[layer, labels]} />
       </MapGL>
     );
   }
