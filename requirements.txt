@@ -5,6 +5,7 @@ decorator==4.2.1
 enum34==1.1.6
 Flask==0.12.2
 Flask-Compress==1.4.0
+Flask-Cors==3.0.3
 GeoAlchemy2==0.4.2
 ipdb==0.11
 ipython==5.5.0

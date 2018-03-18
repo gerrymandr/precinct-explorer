@@ -38,8 +38,7 @@ def get_state_precincts_shapefile(state):
     with get_dbconnection() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
             cur.execute(state_query, {'state': state})
-            results = cur.fetchall()
-            for row in results:
+            for row in cur:
                 row_obj = {}
                 for key, value in row.iteritems():
                     if key in ('centroid', 'st_asgeojson'):
