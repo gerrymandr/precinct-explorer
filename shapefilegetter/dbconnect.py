@@ -28,5 +28,5 @@ def get_metadata():
     metadata = MetaData(bind=engine)  
 
 
-metadata = get_metadata()
+# metadata = get_metadata()
 conn = get_dbconnection()

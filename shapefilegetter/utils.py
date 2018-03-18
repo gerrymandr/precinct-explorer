@@ -1,5 +1,10 @@
 from dbconnect import conn
 
+from flask import after_this_request, request
+from cStringIO import StringIO as IO
+import gzip
+import functools 
+
 def get_demo_shapefile():
     cur = conn.cursor()
     get_one_shapefile = "SELECT ST_AsGeoJSON(the_geom) FROM tiger2012.cd LIMIT 1"
