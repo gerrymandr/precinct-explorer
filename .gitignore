@@ -20,3 +20,4 @@ npm-debug.log
 src/dist
 *json
 envvars
+app_cache/*

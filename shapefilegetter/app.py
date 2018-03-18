@@ -6,12 +6,16 @@ from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash, jsonify
 from flask_compress import Compress
 
+from werkzeug.contrib.cache import FileSystemCache
+
 from dbconnect import get_dbconnection
 from utils import get_demo_shapefile
 from sqlalchemy import Table
 
 app = Flask(__name__)
 Compress(app)
+
+app_cache = FileSystemCache('app_cache', threshold=500, default_timeout=5 * 60)
 
 @app.route('/')
 def hello_world():
@@ -24,18 +28,8 @@ def my_route():
   filter = request.args.get('filter', default = '*', type = str)
 
 
-@app.route('/shapefiles/precincts')
-def precinct_shapefiles():
-    # initialize response object
+def get_state_precincts_shapefile(state):
     response_obj = []
-    # get 'state' from URL param
-    state = request.args.get('state', default=None, type=str)
-    # get database connection and special psycopg2 DictCursor
-
-    # return empty response if we don't have a state specified
-    if state is None:
-        return jsonify({})
-
     state_query = """SELECT state_name, county_name, precinct_name,
         ST_AsGeoJSON(ST_Centroid(the_geom)) AS centroid, ST_AsGeoJSON(the_geom)
         FROM precinct_view_2012 WHERE state_name = %(state)s"""
@@ -51,6 +45,25 @@ def precinct_shapefiles():
                     else:
                         row_obj[key] = value
                 response_obj.append(row_obj)
+    return response_obj
+
+
+@app.route('/shapefiles/precincts')
+def precinct_shapefiles():
+    # get 'state' from URL param
+    state = request.args.get('state', default=None, type=str)
+
+    # get database connection and special psycopg2 DictCursor
+
+    # return empty response if we don't have a state specified
+    if state is None:
+        return jsonify({})
+
+    response_obj = app_cache.get(state)
+    if response_obj is None:
+        response_obj = get_state_precincts_shapefile(state)
+        app_cache.set(state, response_obj, timeout=10 * 60)
+
     return jsonify(response_obj)
 
 @app.route('/shapefiles/cds')
