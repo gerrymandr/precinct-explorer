@@ -4,6 +4,9 @@ import { render } from "react-dom";
 import MapGL from "react-map-gl";
 import DeckGL, { GeoJsonLayer } from "deck.gl";
 import Dropdown from "react-dropdown";
+import {setParameters} from 'luma.gl';
+
+import {TextLayer} from 'deck.gl-layers';
 
 import { json as requestJson } from "d3-request";
 
@@ -240,6 +243,18 @@ function to_feature_collection(arr) {
   };
 }
 
+function data_to_labels(arr) {
+  let labels = [];
+  for (var precinct in arr) {
+    const { precinct_name, centroid } = arr[precinct];
+    labels.push({
+      text: precinct_name,
+      coordinates: JSON.parse(centroid).coordinates
+    });
+  }
+  return labels;
+}
+
 function rand() {
   return Math.floor(Math.random() * 255) + 0;
 }
@@ -259,6 +274,7 @@ class Root extends Component {
         height: 500
       },
       data: null,
+      labels: [],
       hoveredFeature: null,
       state_name: "North Carolina",
       county_name: "",
@@ -267,7 +283,10 @@ class Root extends Component {
     };
     requestJson(DATA_URL, (error, response) => {
       if (!error) {
-        this.setState({ data: to_feature_collection(NC) });
+        this.setState({
+          data: to_feature_collection(NC),
+          labels: data_to_labels(NC)
+        });
       }
     });
   }
@@ -276,6 +295,13 @@ class Root extends Component {
     window.addEventListener("resize", this._resize.bind(this));
     this._resize();
   }
+
+    _initialize(gl) {
+        setParameters(gl, {
+            blendFunc: [gl.SRC_ALPHA, gl.ONE, gl.ONE_MINUS_DST_ALPHA, gl.ONE],
+            blendEquation: gl.FUNC_ADD
+        });
+    }
 
   _resize() {
     this._onViewportChange({
@@ -328,7 +354,7 @@ class Root extends Component {
   }
 
   _render_map() {
-    const { viewport, data } = this.state;
+    const { viewport, data, labels } = this.state;
     if (!data) {
       return null;
     }
@@ -353,7 +379,7 @@ class Root extends Component {
         onViewportChange={this._onViewportChange.bind(this)}
         mapboxApiAccessToken={MAPBOX_TOKEN}
       >
-        <DeckGL {...viewport} layers={[layer]} />
+            <DeckGL {...viewport} layers={[layer, labels]} />
       </MapGL>
     );
   }
