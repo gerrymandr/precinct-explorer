@@ -1,12 +1,14 @@
 {
   "scripts": {
     "start-local": "webpack-dev-server --env.local --progress --hot --open",
-    "start": "webpack-dev-server --progress --hot --open"
+    "start": "webpack-dev-server --progress --hot --open",
+    "format": "./node_modules/prettier/bin-prettier.js app.js --write"
   },
   "dependencies": {
     "d3-request": "^1.0.5",
     "deck.gl": "^5.0.0",
     "luma.gl": "^5.0.0",
+    "prettier": "^1.11.1",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-map-gl": "^3.2.0"
