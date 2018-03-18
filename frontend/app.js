@@ -3,6 +3,7 @@ import React, { Component } from "react";
 import { render } from "react-dom";
 import MapGL from "react-map-gl";
 import DeckGL, { GeoJsonLayer } from "deck.gl";
+import Dropdown from "react-dropdown";
 
 import { json as requestJson } from "d3-request";
 
@@ -17,6 +18,190 @@ const DATA_URL =
 const NC = require("./nc2012_results.json");
 
 const colorScale = r => [r * 255, 140, 200 * (1 - r)];
+
+const state_options = [
+  "Alabama",
+  "Alaska",
+  "Arizona",
+  "Arkansas",
+  "California",
+  "Colorado",
+  "Connecticut",
+  "Delaware",
+  "District of Columbia",
+  "Florida",
+  "Georgia",
+  "Hawaii",
+  "Idaho",
+  "Illinois",
+  "Indiana",
+  "Iowa",
+  "Kansas",
+  "Louisiana",
+  "Maine",
+  "Maryland",
+  "Massachusetts",
+  "Michigan",
+  "Minnesota",
+  "Mississippi",
+  "Missouri",
+  "Montana",
+  "Nebraska",
+  "Nevada",
+  "New Hampshire",
+  "New Jersey",
+  "New Mexico",
+  "New York",
+  "North Carolina",
+  "North Dakota",
+  "Ohio",
+  "Oklahoma",
+  "Oregon",
+  "Pennsylvania",
+  "Puerto Rico",
+  "South Carolina",
+  "South Dakota",
+  "Tennessee",
+  "Texas",
+  "Utah",
+  "Vermont",
+  "Virginia",
+  "Washington",
+  "West Virginia",
+  "Wisconsin",
+  "Wyoming"
+];
+
+const shape_options = ["US Congressional Districts", "Census VTD Precincts"];
+
+function renderTable(
+  state,
+  layerName = "No Layer Name",
+  testTitle = "Hovered Point"
+) {
+  return (
+    <table width="100%">
+      <thead>
+        <tr>
+          <th />
+          <th>{testTitle}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Year</th>
+          <td> 2012 </td>
+        </tr>
+        <tr>
+          <th>County, State</th>
+          <td>
+            {state["county_name"] || "None"} County, {state["state_name"]}
+          </td>
+        </tr>
+        <tr>
+          <th>Entity Name</th>
+          <td> {state.entity_name || "No entity selected"} </td>
+        </tr>
+        <tr>
+          <th>Entity Type</th>
+          <td> {state.entity_type || "No entity selected"} </td>
+        </tr>
+      </tbody>
+    </table>
+  );
+}
+
+function LayerInfo(state) {
+  let data = [];
+  return (
+    <div
+      id="overlay-control"
+      style={{
+        position: "absolute",
+        bottom: 20,
+        left: 20,
+        zIndex: 99,
+        pointerEvents: "none"
+      }}
+    >
+      <div
+        style={{
+          padding: "1em",
+          marginBottom: "2em",
+          width: 500
+        }}
+      >
+        <div>{renderTable(state.state)}</div>
+      </div>
+    </div>
+  );
+}
+
+function StateDropdown({ value, on_change }) {
+  return (
+    <div
+      id="overlay-control"
+      style={{
+        position: "absolute",
+        top: 20,
+        right: 30,
+        zIndex: 99,
+        pointerEvents: "auto"
+      }}
+    >
+      <div
+        style={{
+          padding: "1em",
+          marginTop: "2em",
+          width: 500,
+          overflowX: "hidden",
+          overflowY: "scroll"
+        }}
+      >
+        <Dropdown
+          className="state_select_id"
+          options={state_options}
+          onChange={on_change}
+          value={value}
+          placeholder="State"
+        />
+      </div>
+    </div>
+  );
+}
+
+function EntityDropdown({ value, on_change }) {
+  return (
+    <div
+      id="overlay-control"
+      style={{
+        position: "absolute",
+        top: 20,
+        left: 40,
+        zIndex: 99,
+        pointerEvents: "auto"
+      }}
+    >
+      <div
+        style={{
+          padding: "1em",
+          marginTop: "2em",
+          width: 500,
+          overflowX: "hidden",
+          overflowY: "scroll"
+        }}
+      >
+        <Dropdown
+          className="entity_select_id"
+          options={shape_options}
+          onChange={on_change}
+          value={value}
+          placeholder="Entity Type"
+        />
+      </div>
+    </div>
+  );
+}
 
 function to_feature_collection(arr) {
   let features = [];
@@ -51,6 +236,18 @@ function to_feature_collection(arr) {
   };
 }
 
+function data_to_labels(arr) {
+  let labels = [];
+  for (var precinct in arr) {
+    const { precinct_name, centroid } = arr[precinct];
+    labels.push({
+      text: precinct_name,
+      coordinates: JSON.parse(centroid).coordinates
+    });
+  }
+  return labels;
+}
+
 function rand() {
   return Math.floor(Math.random() * 255) + 0;
 }
@@ -70,12 +267,18 @@ class Root extends Component {
         height: 500
       },
       data: null,
-      hoveredFeature: null
+      hoveredFeature: null,
+      state_name: "North Carolina",
+      county_name: "",
+      entity_name: "",
+      entity_type: "Census VTD Precincts",
+      year: 2012
     };
     requestJson(DATA_URL, (error, response) => {
       if (!error) {
-        this.setState({ data: to_feature_collection(NC) });
-        //this.setState({data: response});
+        this.setState({
+          data: to_feature_collection(NC)
+        });
       }
     });
   }
@@ -103,20 +306,12 @@ class Root extends Component {
   }
 
   _onHover({ x, y, object }) {
+    console.log(object);
     this.setState({ x, y, hoveredFeature: object });
   }
 
-  _renderTooltip() {
-    const { x, y, hoveredObject } = this.state;
-    console.log("foo", hoveredObject);
-    if (!hoveredObject) {
-      return null;
-    }
-    return (
-      <div className="tooltip" style={{ left: x, top: y }}>
-        <div>{`Accidents`}</div>
-      </div>
-    );
+  _onSelect(val) {
+    console.log(val);
   }
 
   _onMouseMove(evt) {
@@ -135,13 +330,11 @@ class Root extends Component {
     this.setState({ mouseEntered: false });
   }
 
-  render() {
-    const { viewport, data } = this.state;
-
+  _render_map() {
+    const { viewport, data, labels } = this.state;
     if (!data) {
       return null;
     }
-
     const layer = new GeoJsonLayer({
       id: "geojson",
       data,
@@ -151,12 +344,45 @@ class Root extends Component {
       extruded: false,
       wireframe: false,
       fp64: false,
-      onHover: this._onHover.bind(this),
       getFillColor: () => [rand(), rand(), rand(), rand()],
       elevationScale: 0,
       getLineColor: f => [255, 255, 255],
-      pickable: Boolean(this.props.onHover)
+      pickable: true,
+      onHover: function(info) {
+        console.log(info);
+        if (info && info.object) {
+          this.setState({
+            county_name: info.object.properties.county_name,
+            entity_name: info.object.properties.precinct_name
+          });
+        }
+      }.bind(this)
     });
+    return (
+      <MapGL
+        {...viewport}
+        onViewportChange={this._onViewportChange.bind(this)}
+        mapboxApiAccessToken={MAPBOX_TOKEN}
+      >
+        <DeckGL {...viewport} layers={[layer, labels]} />
+      </MapGL>
+    );
+  }
+
+  _on_state_select(value) {
+    this.setState({ state_name: value.value });
+  }
+
+  _on_entity_select(value) {
+    this.setState({ entity_type: value.value });
+  }
+
+  render() {
+    const { viewport, data, state_name, entity_type } = this.state;
+
+    if (!data) {
+      return null;
+    }
 
     return (
       <div
@@ -164,14 +390,16 @@ class Root extends Component {
         onMouseEnter={this._onMouseEnter.bind(this)}
         onMouseLeave={this._onMouseLeave.bind(this)}
       >
-        {this._renderTooltip.bind(this)}
-        <MapGL
-          {...viewport}
-          onViewportChange={this._onViewportChange.bind(this)}
-          mapboxApiAccessToken={MAPBOX_TOKEN}
-        >
-          <DeckGL {...viewport} layers={[layer]} />
-        </MapGL>
+        {this._render_map()}
+        <LayerInfo state={this.state} />
+        <StateDropdown
+          value={state_name}
+          on_change={this._on_state_select.bind(this)}
+        />
+        <EntityDropdown
+          value={entity_type}
+          on_change={this._on_entity_select.bind(this)}
+        />
       </div>
     );
   }
