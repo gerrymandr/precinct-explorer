@@ -10,7 +10,6 @@ def get_dbconnection():
     conn = psycopg2.connect(dbname=db_name, user=username, password=pw, host=host)
     return conn
 
-
 def get_shapefile():
     conn = get_dbconnection()
     cur = conn.cursor()

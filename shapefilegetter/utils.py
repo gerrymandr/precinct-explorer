@@ -7,3 +7,21 @@ def get_demo_shapefile():
     shapefile = cur.fetchone()
     shapefile = shapefile[0]
     return shapefile
+
+
+def create_view():
+    cur = conn.cursor()
+    cur.execute("DROP VIEW IF EXISTS precinct_view_2012")
+    create = """CREATE VIEW precinct_view_2012 AS
+        SELECT v.gid, v.statefp10, v.countyfp10, v.vtdst10, v.geoid10,
+            s.name AS state_name, c.name AS county_name,
+            v.namelsad10 AS precinct_name, v.the_geom
+        FROM tiger2012.vtd v
+        JOIN tiger2012.county c ON v.statefp10 = c.statefp
+            AND v.countyfp10 = c.countyfp
+        JOIN tiger2012.state s ON v.statefp10 = s.statefp
+        """
+    cur.execute(create)
+    conn.commit()
+    cur.close()
+    conn.close()
