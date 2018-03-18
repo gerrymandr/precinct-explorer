@@ -254,8 +254,8 @@ class Root extends Component {
     super(props);
     this.state = {
       viewport: {
-          latitude: 39.609065,
-          longitude: -75.664186,
+        latitude: 39.609065,
+        longitude: -75.664186,
         zoom: 11,
         maxZoom: 16,
         pitch: 0,
@@ -273,11 +273,10 @@ class Root extends Component {
     };
   }
 
-    _requestStateName() {
-
+  _requestStateName() {
     const { state_name } = this.state;
-        const url = PRECINCT_URL + "state=" + state_name;
-        console.log('Looking up', url);
+    const url = PRECINCT_URL + "state=" + state_name;
+    console.log("Looking up", url);
     requestJson(url, (error, response) => {
       if (!error) {
         this.setState({
@@ -285,8 +284,8 @@ class Root extends Component {
           state_name: state_name
         });
       } else {
-          console.log('boned');
-          console.log(error);
+        console.log("boned");
+        console.log(error);
       }
     });
   }
@@ -357,7 +356,6 @@ class Root extends Component {
       getLineColor: f => [255, 255, 255],
       pickable: true,
       onHover: function(info) {
-        console.log(info);
         if (info && info.object) {
           this.setState({
             county_name: info.object.properties.county_name,
@@ -378,7 +376,12 @@ class Root extends Component {
   }
 
   _on_state_select(value) {
-    this.setState({ state_name: value.value });
+    this.setState(
+      { state_name: value.value },
+      function() {
+        this._requestStateName();
+      }.bind(this)
+    );
   }
 
   _on_entity_select(value) {
