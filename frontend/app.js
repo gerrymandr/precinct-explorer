@@ -116,7 +116,10 @@ function LayerInfo(state) {
         bottom: 20,
         left: 20,
         zIndex: 99,
-        pointerEvents: "none"
+        pointerEvents: "none",
+        backgroundColor: "coral",
+        borderRadius: "10px",
+        border: "1px solid black"
       }}
     >
       <div
@@ -141,14 +144,18 @@ function StateDropdown({ value, on_change }) {
         top: 20,
         right: 30,
         zIndex: 99,
-        pointerEvents: "auto"
+        pointerEvents: "auto",
+        backgroundColor: "coral",
+        borderRadius: "10px",
+        border: "1px solid black"
       }}
     >
       <div
         style={{
           padding: "1em",
-          marginTop: "2em",
-          width: 500,
+          marginTop: "1em",
+          height: 100,
+          width: 300,
           overflowX: "hidden",
           overflowY: "scroll"
         }}
@@ -174,14 +181,18 @@ function EntityDropdown({ value, on_change }) {
         top: 20,
         left: 40,
         zIndex: 99,
-        pointerEvents: "auto"
+        pointerEvents: "auto",
+        borderRadius: "10px",
+        backgroundColor: "coral",
+        border: "1px solid black"
       }}
     >
       <div
         style={{
           padding: "1em",
           marginTop: "2em",
-          width: 500,
+            height: 50,
+            width: 300,
           overflowX: "hidden",
           overflowY: "scroll"
         }}
