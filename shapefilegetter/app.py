@@ -46,7 +46,8 @@ def get_state_precincts_shapefile(state):
                     else:
                         row_obj[key] = value
                 response_obj.append(row_obj)
-    return response_obj
+    json_response_obj = json.dumps(response_obj)
+    return json_response_obj
 
 
 @app.route('/shapefiles/precincts')
@@ -60,12 +61,17 @@ def precinct_shapefiles():
     if state is None:
         return jsonify({})
 
-    response_obj = app_cache.get(state)
-    if response_obj is None:
-        response_obj = get_state_precincts_shapefile(state)
-        app_cache.set(state, response_obj, timeout=10 * 60)
+    json_response_obj = app_cache.get(state)
+    if json_response_obj is None:
+        json_response_obj = get_state_precincts_shapefile(state)
+        app_cache.set(state, json_response_obj, timeout=10 * 60)
 
-    return jsonify(response_obj)
+    response = app.response_class(
+        response=json_response_obj,
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 @app.route('/shapefiles/cds')
 def cd_shapefiles():
