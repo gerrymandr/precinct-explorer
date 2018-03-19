@@ -1,0 +1,8 @@
+export FLASK_APP='shapefilegetter/app.py'
+export FLASK_DEBUG=1
+export CENSUS_DB_PW=''
+export CENSUS_DB_USERNAME=''
+export CENSUS_DB_HOST=''
+export CENSUS_DB_NAME='census'
+export MapboxAccessToken=''
+
