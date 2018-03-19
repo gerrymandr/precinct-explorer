@@ -101,6 +101,14 @@ function renderTable(
           <th>Entity Type</th>
           <td> {state.entity_type || "No entity selected"} </td>
         </tr>
+          <tr>
+          <th>Polsby</th>
+          <td> {state.polsby_popper || "NaN"} </td>
+          </tr>
+          <tr>
+          <th>schwartzberg </th>
+          <td> {state.schwartzberg || "NaN"} </td>
+          </tr>
       </tbody>
     </table>
   );
@@ -217,7 +225,9 @@ function to_feature_collection(arr) {
       county_name,
       precinct_name,
       centroid,
-      st_asgeojson
+      st_asgeojson,
+        polsby_popper,
+        schwartzberg
     } = arr[precinct];
     features.push({
       type: "Feature",
@@ -225,7 +235,9 @@ function to_feature_collection(arr) {
       properties: {
         county_name: county_name,
         precinct_name: precinct_name,
-        title: precinct_name
+          title: precinct_name,
+          polsby_popper: polsby_popper,
+          schwartzberg: schwartzberg
       }
     });
     features.push({
@@ -276,9 +288,11 @@ class Root extends Component {
       },
       data: null,
       hoveredFeature: null,
-      state_name: "Delaware",
+      state_name: "North Dakota",
       county_name: "",
       entity_name: "",
+      polsby_popper: "",
+      schwartzberg: "",
       entity_type: "Census VTD Precincts",
       year: 2012
     };
@@ -370,7 +384,9 @@ class Root extends Component {
         if (info && info.object) {
           this.setState({
             county_name: info.object.properties.county_name,
-            entity_name: info.object.properties.precinct_name
+            entity_name: info.object.properties.precinct_name,
+            polsby_popper: info.object.properties.polsby_popper,
+            schwartzberg: info.object.properties.schwartzberg
           });
         }
       }.bind(this)
