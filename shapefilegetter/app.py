@@ -17,7 +17,7 @@ app = Flask(__name__)
 Compress(app)
 CORS(app)
 
-app_cache = FileSystemCache('app_cache', threshold=500, default_timeout=5 * 60)
+app_cache = FileSystemCache('app_cache', threshold=500, default_timeout=0)
 
 @app.route('/')
 def hello_world():
@@ -33,7 +33,9 @@ def my_route():
 def get_state_precincts_shapefile(state):
     response_obj = []
     state_query = """SELECT state_name, county_name, precinct_name,
-        ST_AsGeoJSON(ST_Centroid(the_geom)) AS centroid, ST_AsGeoJSON(the_geom)
+        ST_AsGeoJSON(ST_Centroid(the_geom)) AS centroid, ST_AsGeoJSON(the_geom),
+        polsby_popper(ST_Transform(the_geom, 4326)::geography),
+        schwartzberg(ST_Transform(the_geom, 4326)::geography)
         FROM precinct_view_2012 WHERE state_name = %(state)s"""
     with get_dbconnection() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
@@ -62,9 +64,10 @@ def precinct_shapefiles():
         return jsonify({})
 
     json_response_obj = app_cache.get(state)
+    print 'state=%s cache=%s' % (state, json_response_obj is not None)
     if json_response_obj is None:
         json_response_obj = get_state_precincts_shapefile(state)
-        app_cache.set(state, json_response_obj, timeout=10 * 60)
+        app_cache.set(state, json_response_obj, timeout=0)
 
     response = app.response_class(
         response=json_response_obj,
