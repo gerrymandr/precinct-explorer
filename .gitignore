@@ -22,3 +22,4 @@ src/dist
 envvars
 app_cache/*
 *.pyc
+data/

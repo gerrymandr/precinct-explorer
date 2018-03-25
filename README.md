@@ -36,7 +36,8 @@ Software Prerequisites:
 
 Data Prerequisites:
 - [Census Reporter's Census PostGIS backup][census_reporter_pg]. As mentioned
-  below, we have a hosted database of this data that others may use.
+  below, we have a hosted database of this data that others may use. If you've
+  setup Postgres locally, you can also use [mock data](#mock-postgres-instance).
 
 [census_reporter_pg]: http://censusreporter.tumblr.com/post/73727555158/easier-access-to-acs-data
 
@@ -60,7 +61,23 @@ Set up the front end:
 9. Run `npm run` (make sure `MapboxAccessToken` is an environment variable)
 10. Your site should be at `http://127.0.0.1:8080`
 
+### Mock Postgres Instance
+
+If you're developing locally and have Postgres installed, the
+[Makefile](Makefile) can help you setup a mock instance of the Census database
+to develop against:
+
+```
+# Checks out
+git submodule update --init --recursive
+
+# Creates census db and users, enables postgis, etc.
+make setup_db
+
+# Loads test data
+make load_testdb
+```
+
 # License
 
 Distributed under the MIT License (see LICENSE).
-
