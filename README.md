@@ -60,6 +60,7 @@ Set up the front end:
 9. Run `npm run` (make sure `MapboxAccessToken` is an environment variable)
 10. Your site should be at `http://127.0.0.1:8080`
 
-## Database Setup
+# License
 
-TODO
+Distributed under the MIT License (see LICENSE).
+

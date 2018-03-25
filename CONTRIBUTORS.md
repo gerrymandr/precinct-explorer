@@ -1,3 +1,2 @@
-Buro Mookerji (@mookerji) -- mookerji@gmail.com
-Katherine Elliott (@radiantradon) -- radiantradon@gmail.com
-
+- Buro Mookerji (@mookerji) -- mookerji@gmail.com
+- Katherine Elliott (@radiantradon) -- radiantradon@gmail.com
