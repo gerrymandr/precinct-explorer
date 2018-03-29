@@ -1,22 +1,23 @@
-BACKUP_URL = https://s3.amazonaws.com/census-backup/tiger/2012/tiger2012_backup.sql.gz
-PG_URI ?= fill_me_in
+S3_BACKUP_URL = https://s3.amazonaws.com/census-backup/tiger/2012/tiger2012_backup.sql.gz
+GS_BACKUP_URL = https://storage.googleapis.com/gerrymandr-census-backup-7gklgatcldhafsq/data
+PG_URI       ?= fill_me_in
 
 data/tiger2012_backup.sql.gz:
-	curl -o data/tiger2012_backup.sql.gz -L -O -C - $(BACKUP_URL)
+	curl -o data/tiger2012_backup.sql.gz -L -O -C - $(S3_BACKUP_URL)
 
-data/nc.cd.csv:
-	psql -c "COPY (select * from tiger2012.cd where statefp = '37') TO STDOUT CSV HEADER;" $(PG_URI) > data/nc.cd.csv
+data/nc.cd.csv.gz:
+	curl -o data/nc.cd.csv.gz -L -O -C - $(GS_BACKUP_URL)/nc.cd.csv.gz
 
-data/nc.vtd.csv:
-	psql -c "COPY (select * from tiger2012.vtd where statefp10 = '37') TO STDOUT CSV HEADER;" $(PG_URI) > data/nc.vtd.csv
+data/nc.vtd.csv.gz:
+	curl -o data/nc.vtd.csv.gz -L -O -C - $(GS_BACKUP_URL)/nc.vtd.csv.gz
 
-data/nc.county.csv:
-	psql -c "COPY (select * from tiger2012.county where statefp = '37') TO STDOUT CSV HEADER;" $(PG_URI) > data/nc.county.csv
+data/nc.county.csv.gz:
+	curl -o data/nc.county.csv.gz -L -O -C - $(GS_BACKUP_URL)/nc.county.csv.gz
 
-data/nc.state.csv:
-	psql -c "COPY (select * from tiger2012.state where statefp = '37') TO STDOUT CSV HEADER;" $(PG_URI) > data/nc.state.csv
+data/nc.state.csv.gz:
+	curl -o data/nc.state.csv.gz -L -O -C - $(GS_BACKUP_URL)/nc.state.csv.gz
 
-backup_data: data/nc.cd.csv data/nc.vtd.csv data/nc.county.csv data/nc.state.csv
+mock_data: data/nc.cd.csv.gz data/nc.vtd.csv.gz data/nc.county.csv.gz data/nc.state.csv.gz
 
 .PHONY: setup_db
 setup_db:
@@ -34,10 +35,10 @@ restore_db: data/tiger2012_backup.sql.gz
 	gzcat data/tiger2012_backup.sql.gz | psql -U census -q census
 	psql -U census -q -f schema/migrations/20180324-init-tables.sql census
 
-load_testdb: backup_data
+load_testdb: mock_data
 	psql -U census -q -f schema/test/20180328-init-tiger2012.sql census
 	psql -U census -q -f schema/migrations/20180324-init-tables.sql census
-	cat data/nc.cd.csv | psql -c "COPY tiger2012.cd FROM STDIN CSV HEADER;" census
-	cat data/nc.vtd.csv | psql -c "COPY tiger2012.vtd FROM STDIN CSV HEADER;" census
-	cat data/nc.state.csv | psql -c "COPY tiger2012.state FROM STDIN CSV HEADER;" census
-	cat data/nc.county.csv | psql -c "COPY tiger2012.county FROM STDIN CSV HEADER;" census
+	gzcat data/nc.cd.csv.gz | psql -U census -c "COPY tiger2012.cd FROM STDIN CSV HEADER;" census
+	gzcat data/nc.vtd.csv.gz | psql -U census -c "COPY tiger2012.vtd FROM STDIN CSV HEADER;" census
+	gzcat data/nc.state.csv.gz | psql -U census -c "COPY tiger2012.state FROM STDIN CSV HEADER;" census
+	gzcat data/nc.county.csv.gz | psql -U census -c "COPY tiger2012.county FROM STDIN CSV HEADER;" census
