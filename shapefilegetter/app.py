@@ -30,16 +30,29 @@ def my_route():
   filter = request.args.get('filter', default = '*', type = str)
 
 
-def get_state_precincts_shapefile(state):
+# Default decimal precision on lat-lon coordinates returned from PostGIS's
+# ST_AsGeoJSON function. By default, this value is 10, but in reality, we only
+# need 5 (which corresponds to ~1meter) error when rendered on a map. Why is
+# this value 5 and not 4 or 6? The Census shapefiles seem to encode 6 decimal
+# places, which is too accurate (~10cm). 4 decimal places is possibly too coarse
+# (~10m) to accurately separate entities like precincts along street boundaries.
+#
+# See:
+# - https://en.wikipedia.org/wiki/Decimal_degrees#Precision
+# - https://postgis.net/docs/ST_AsGeoJSON.html
+LATLON_PRECISION_DEFAULT = 5
+
+
+def get_state_precincts_shapefile(state, geojson_precision=LATLON_PRECISION_DEFAULT):
     response_obj = []
     state_query = """SELECT state_name, county_name, precinct_name,
-        ST_AsGeoJSON(ST_Centroid(the_geom)) AS centroid, ST_AsGeoJSON(the_geom),
+        ST_AsGeoJSON(ST_Centroid(the_geom)) AS centroid, ST_AsGeoJSON(the_geom, %(geojson_precision)s),
         polsby_popper(ST_Transform(the_geom, 4326)::geography),
         schwartzberg(ST_Transform(the_geom, 4326)::geography)
         FROM precinct_view_2012 WHERE state_name = %(state)s"""
     with get_dbconnection() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-            cur.execute(state_query, {'state': state})
+            cur.execute(state_query, {'state': state, 'geojson_precision': geojson_precision})
             for row in cur:
                 row_obj = {}
                 for key, value in row.iteritems():
