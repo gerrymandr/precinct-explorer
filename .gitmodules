@@ -1,4 +1,0 @@
-[submodule "third_party/pg_compactness"]
-	path = third_party/pg_compactness
-	url = git@github.com:gerrymandr/pg_compactness.git
-	ignore = dirty
